@@ -73,7 +73,11 @@ close($sock);
 
 foreach my $line ( split( "\n", $response ) ) {
     my ( $key, $value ) = split( /:\s*/, $line, 2 );
-    $np->add_perfdata( label => $key, value => "${value}c" );
+    if ($key =~ /(Received|Written)$/) {
+	    $np->add_perfdata( label => $key, value => "${value}c" );
+    } else {
+	    $np->add_perfdata( label => $key, value => "${value}" );
+    }
 }
 
 $np->nagios_exit( OK, "rrdcached up and alive" );
