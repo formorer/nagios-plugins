@@ -1,0 +1,66 @@
+#!/usr/bin/perl
+#
+# Author David Cox
+# Created from various code examples found on the web
+# Last Modified 08/06/2002
+# Feel free to use or modify as needed to suit your needs
+#######################################################
+# MAXWAIT is used because the send message function didn't seem to
+# like being called to fast. The message would be sent unless I waited a second
+# or so. You can experiment with it but I just went with 2 seconds.
+#######################################################
+
+use strict;
+use Net::Jabber qw(Client) ;
+use Net::Jabber qw(Message) ;
+use Net::Jabber qw(Protocol) ;
+use Net::Jabber qw(Presence) ;
+
+
+my $len = scalar @ARGV;
+
+sub _die {
+open (FH, ">/tmp/logfile");
+print FH "Debug: @_";
+close (FH);
+die "@_";
+}
+
+if ($len ne 2) {
+   _die "Usage...\n notify [jabberid] [message]\n";
+}
+
+my @field=split(/,/,$ARGV[0]);
+
+use constant RECIPIENT => $ARGV[0];
+use constant SERVER    => 'jabber.snow-crash.org';
+use constant PORT      => 5222;
+use constant USER      => 'nagios';
+use constant PASSWORD  => 'XXXXXXX';
+use constant RESOURCE  => 'resource';
+use constant MESSAGE   => $ARGV[1];
+use constant MAXWAIT   => 2 ;
+
+my $connection = Net::Jabber::Client->new();
+$connection->Connect( "hostname" => SERVER,"port" => PORT )  or _die
+"Cannot connect ($!)\n";
+
+my @result = $connection->AuthSend( "username" => USER,"password" =>
+PASSWORD,"resource" => RESOURCE );
+if ($result[0] ne "ok") {
+ _die "Ident/Auth with server failed: $result[0] - $result[1]\n";
+}
+
+foreach ( @field ) {
+   my $message = Net::Jabber::Message->new();
+   $message->SetMessage( "to"           => $_,
+                         "subject"      => "Notification",
+                         "type"         => "chat",
+                         "body"         => MESSAGE);
+
+   $connection->Send($message);
+   sleep(MAXWAIT);
+}
+$connection->Disconnect();
+exit;
+

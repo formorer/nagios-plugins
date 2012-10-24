@@ -1,0 +1,3 @@
+#!/bin/sh
+
+/usr/local/bin/notify_via_jabber $1 "$( printf "\n%b" "$2" )"
